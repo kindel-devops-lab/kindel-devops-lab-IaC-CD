@@ -15,17 +15,16 @@ permissions:
     contents: read
     id-token: write
 
+# IDs injection for Azure, OIDC Auth for Azure Secret
+env:
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}  
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        ARM_USE_AZUREAD: "true"
+
 jobs:
-    ephemeral-cd:
+    terraform-plan:
         runs-on: ubuntu-latest
-
-        # IDs injection for Azure, OIDC Auth for Azure Secret
-        env:
-            ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-            ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}  
-            ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-            ARM_USE_AZUREAD: "true"
-
         steps:
 
             - name : Check out infrastructure code
@@ -51,38 +50,74 @@ jobs:
               timeout-minutes: 3
               run: terraform init
 
-            - name: Terraform Apply
-              run: terraform apply -auto-approve
+            - name: Terraform Plan
+              run: terraform plan -out=tfplan
 
-            - name: Smoke test (check health endpoint)
-              
-              run: |
-                # URL and Port retrieval from terraform outputs & variables
-                APP_URL=$(terraform output -raw web_app_health_url)
-                echo "Testing ${APP_URL}"
+            - name: Upload Terraform Plan
+              uses: actions/upload-artifact@v4
+              with:
+                name: tfplan
+                path: tfplan
+                retention-days: 1
 
-                # Test loop
-                MAX_TRIES=12
-                WAIT_TO_RETRY=5
+    terraform-apply:
+        needs: terraform-plan
+        runs-on: ubuntu-latest
+        environment: staging
 
-                for i in $(seq 1 $MAX_RETRIES); do
-                    echo "--| Attempt $i/$MAX_TRIES |--"
+        steps:
+        - name: Check out infrastructure code
+          uses: actions/checkout@v4
 
-                    RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "$APP_URL" || true)
-                    echo "Response: ${RESPONSE}"
+        - name: Download Terraform Plan
+          uses: actions/download-artifact@v4
+          with:
+            name: tfplan
 
-                    if echo "${RESPONSE}" | grep -q "UP"; then
-                        echo "Smoke test passed successfully"
-                        exit 0
-                    fi
-                    echo "Service not ready yet. Retrying in ${WAIT_TO_RETRY}s..."
-                    sleep $SLEEP_SECONDS
-                done
+        - name: Log in to Azure with OIDC
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-                echo "Error : Failed health endpoint check after $MAX_TRIES attempts."
-                exit 1
+        - name: Set up Terraform
+          uses: hashicorp/setup-terraform@v3
+          with:
+            terraform_version: 1.8.0
+            terraform_wrapper: false
+            
 
-            - name: Terraform Destroy
+        - name: Terraform Init (with debug)
+          env:
+            TF_LOG: DEBUG           
+            ARM_LOG: DEBUG 
+          timeout-minutes: 3
+          run: terraform init
+
+        - name: Terraform Apply
+          run: terraform apply tfplan
+
+
+        - name: Smoke test (check health endpoint)   
+          run: |
+            RAW_URL=$(terraform output -raw web_app_url)
+            PORT=$(terraform output -raw port || echo "5000")
+            TARGET_URL="${RAW_URL}:${PORT}/health"
+            echo "Testing ${TARGET_URL}"
+
+            for i in {1..12}; do
+                RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "${TARGET_URL}" || true)
+                if echo "${RESPONSE}" | grep -q "UP"; then
+                echo "Smoke test passed successfully"
+                exit 0
+                fi
+                echo "Waiting for service bootup ($i/12)..."
+                sleep 5
+            done
+            exit 1
+               
+        - name: Terraform Destroy
               # Destroy if asked to or after an automatic check
-              if: always() && (github.event_name == 'push' || inputs.teardown == true)
-              run: terraform destroy -auto-approve
+          if: always() && (github.event_name == 'push' || inputs.teardown == true)
+          run: terraform destroy -auto-approve
