@@ -17,3 +17,7 @@ output "web_app_health_url" {
 output "acr_login_server" {
   value = data.azurerm_container_registry.acr.login_server
 }
+
+output "port" {
+  value = var.port
+}

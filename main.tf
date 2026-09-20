@@ -19,6 +19,7 @@ terraform {
 provider "azurerm" {
   features {}
   use_oidc = true
+  skip_provider_registration = true
 }
 
 data "azurerm_container_registry" "acr" {
