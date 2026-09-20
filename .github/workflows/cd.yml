@@ -13,18 +13,18 @@ on:
 
 permissions:
     contents: read
+    id-token: write
 
 jobs:
     ephemeral-cd:
         runs-on: ubuntu-latest
 
-        # IDs injection for Azure et Docker Hub login
+        # IDs injection for Azure, OIDC Auth for Azure Secret
         env:
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-            ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}  
             ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-            TF_VAR_dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+            ARM_USE_OIDC: "true"
 
         steps:
 
