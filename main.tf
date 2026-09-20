@@ -10,6 +10,8 @@ terraform {
     storage_account_name = "tfstate9e029f24"
     container_name       = "tfstate"
     key                  = "ephemeral-env.terraform.tfstate"
+    use_oidc             = true 
+    use_azuread_auth     = true
   }
 }
 
