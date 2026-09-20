@@ -32,6 +32,13 @@ jobs:
             - name : Check out infrastructure code
               uses: actions/checkout@v4
 
+            - name: Log in to Azure with OIDC
+              uses: azure/login@v2
+              with:
+                client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
             - name: Set up Terraform
               uses: hashicorp/setup-terraform@v3
               with:
@@ -42,6 +49,7 @@ jobs:
               env:
                 TF_LOG: DEBUG           
                 ARM_LOG: DEBUG 
+              timeout-minutes: 3
               run: terraform init
 
             - name: Terraform Apply
