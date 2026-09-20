@@ -38,7 +38,10 @@ jobs:
                 terraform_version: 1.8.0
                 terraform_wrapper: false
 
-            - name: Terraform Init
+            - name: Terraform Init (with debug)
+              env:
+                TF_LOG: DEBUG           
+                ARM_LOG: DEBUG 
               run: terraform init
 
             - name: Terraform Apply
