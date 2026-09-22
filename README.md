@@ -12,9 +12,7 @@ This repository implements automated lifecycle management for a containerized mi
 
 The infrastructure adopts a cost-optimized, serverless deployment pattern using Azure Container Instances (ACI). Instead of maintaining persistent Virtual Machines or dedicated Kubernetes nodes, the environment provisions on demand, validates application availability via smoke tests, and tears down resources to enforce strict FinOps constraints.
 
-<!-- PLACEHOLDER: Insert Cloud Architecture Diagram here -->
-<!-- File: docs/images/infrastructure(light).png or docs/images/infrastructure(dark).png -->
-![Azure Serverless Infrastructure and Automated CD Architecture](docs/images/infrastructure(light).png)
+![Azure Serverless Infrastructure and Automated CD Architecture](docs/images/infrastructure(dark).png)
 
 ### Key Architectural Characteristics
 
@@ -31,8 +29,6 @@ The infrastructure adopts a cost-optimized, serverless deployment pattern using 
 
 Deployment is governed by GitHub Actions, executing declarative checks, environment approvals, automated provisioning, smoke testing, and resource destruction.
 
-<!-- PLACEHOLDER: Insert GitHub Actions CD Workflow Screenshot here -->
-<!-- File: docs/images/cd.png -->
 ![GitHub Actions CD Workflow Execution](docs/images/cd.png)
 
 ### Pipeline Stages
@@ -43,8 +39,6 @@ Deployment is governed by GitHub Actions, executing declarative checks, environm
 4. Endpoint Smoke Testing: Performs iterative HTTP GET probing against the public FQDN (/health) until standard response payload confirms operational status.
 5. Ephemeral Teardown (Destroy): Systematically destroys provisioned ACI compute and associated dynamic resources to maintain a zero-cost footprint outside of test windows.
 
-<!-- PLACEHOLDER: Insert Smoke Test Console Output Screenshot here -->
-<!-- File: docs/images/smoke-test-output.png -->
 ![Automated Smoke Test Verification](docs/images/smoke-test-output.png)
 
 ---
