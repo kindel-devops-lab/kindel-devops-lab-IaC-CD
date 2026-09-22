@@ -58,6 +58,7 @@ Deployment is governed by GitHub Actions, executing declarative checks, environm
 ├── outputs.tf                  # Exposed endpoints, FQDNs, and resource identifiers
 └── versions.tf                 # Terraform core version and provider constraints
 ```
+
 ### Local Execution and Verification
 
 # Prerequisites
