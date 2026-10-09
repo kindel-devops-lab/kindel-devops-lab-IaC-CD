@@ -1,6 +1,6 @@
 # Serverless Ephemeral Infrastructure and Automated CD with Terraform
 
-[![CD Pipeline](https://github.com/kindel-devops-lab/kindel-devops-lab-IaC-CD/actions/workflows/cd.yml/badge.svg)](https://github.com/kindel-devops-lab/azure-infra-terraform/actions/workflows/cd.yml)
+[![CD Pipeline](https://github.com/kindel-devops-lab/kindel-devops-lab-IaC-CD/actions/workflows/cd.yml/badge.svg)](https://github.com/kindel-devops-lab/kindel-devops-lab-IaC-CD/actions/workflows/cd.yml)
 
 Declarative Infrastructure as Code (IaC) managing ephemeral container deployments, zero long-lived credentials via OpenID Connect (OIDC), and automated validation on Microsoft Azure.
 
